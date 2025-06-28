@@ -37,13 +37,22 @@ export default function ButtonDemo() {
             <h2 className="text-2xl font-semibold text-white mb-8 drop-shadow">
               Variantes
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-xl">
                 <h3 className="text-lg font-medium text-white mb-4">Primary</h3>
                 <Button
                   label="Primary Button"
                   onClick={() => handleClick("primary")}
                   variant="primary"
+                />
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-xl">
+                <h3 className="text-lg font-medium text-white mb-4">Success</h3>
+                <Button
+                  label="Success Button"
+                  onClick={() => handleClick("success")}
+                  variant="success"
                 />
               </div>
 
@@ -87,20 +96,20 @@ export default function ButtonDemo() {
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
                 <Button
                   label="Small"
-                  onClick={() => handleClick("primary", "small")}
-                  variant="primary"
+                  onClick={() => handleClick("success", "small")}
+                  variant="success"
                   size="small"
                 />
                 <Button
                   label="Medium"
-                  onClick={() => handleClick("primary", "medium")}
-                  variant="primary"
+                  onClick={() => handleClick("success", "medium")}
+                  variant="success"
                   size="medium"
                 />
                 <Button
                   label="Large"
-                  onClick={() => handleClick("primary", "large")}
-                  variant="primary"
+                  onClick={() => handleClick("success", "large")}
+                  variant="success"
                   size="large"
                 />
               </div>
@@ -118,7 +127,7 @@ export default function ButtonDemo() {
                 <Button
                   label="Normal Button"
                   onClick={() => handleClick("normal")}
-                  variant="primary"
+                  variant="success"
                 />
               </div>
 
@@ -129,7 +138,7 @@ export default function ButtonDemo() {
                 <Button
                   label="Disabled Button"
                   onClick={() => handleClick("disabled")}
-                  variant="primary"
+                  variant="success"
                   disabled
                 />
               </div>
@@ -145,7 +154,7 @@ export default function ButtonDemo() {
               <Button
                 label="Full Width Button"
                 onClick={() => handleClick("fullwidth")}
-                variant="primary"
+                variant="success"
                 fullWidth
               />
             </div>
@@ -158,10 +167,9 @@ export default function ButtonDemo() {
             </h2>
             <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-xl">
               <Button
-                label="🎵 Button con Emoji y Gradiente Personalizado"
+                label="�� Button Success con Emoji"
                 onClick={() => handleClick("custom")}
-                variant="primary"
-                className="bg-gradient-to-r from-purple-500/90 to-pink-500/90 hover:from-purple-400/90 hover:to-pink-400/90"
+                variant="success"
               />
             </div>
           </section>
