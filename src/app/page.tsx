@@ -1,12 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { AddSongModal } from "@/components/modals";
+import { useAddSongModal } from "@/hooks/useAddSongModal";
 
 export default function Home() {
-  const handleAddSong = () => {
-    console.log("Añadiendo canción...");
-    // Aquí se implementaría la lógica para añadir una canción
-  };
+  const { isOpen, openModal, closeModal, handleSave } = useAddSongModal();
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log("Buscando:", e.target.value);
@@ -53,7 +52,7 @@ export default function Home() {
             <div className="w-full sm:w-auto">
               <Button
                 label="+ Añadir Canción"
-                onClick={handleAddSong}
+                onClick={openModal}
                 variant="success"
                 size="medium"
                 fullWidth={true}
@@ -92,7 +91,7 @@ export default function Home() {
           <div className="px-4">
             <Button
               label="+ Añadir Canción"
-              onClick={handleAddSong}
+              onClick={openModal}
               variant="success"
               size="large"
               fullWidth={true}
@@ -101,6 +100,9 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* Modal */}
+      <AddSongModal isOpen={isOpen} onClose={closeModal} onSave={handleSave} />
     </div>
   );
 }
