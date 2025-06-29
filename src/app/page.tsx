@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button, SongCard } from "@/components/ui";
 import { AddSongModal } from "@/components/modals";
 import { NewSongData } from "@/types/song";
@@ -14,6 +15,7 @@ interface SavedSong extends NewSongData {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [songs, setSongs] = useState<SavedSong[]>([]);
   const [editingSong, setEditingSong] = useState<SavedSong | null>(null);
@@ -90,8 +92,17 @@ export default function Home() {
   };
 
   const handlePlay = (songId: string, title: string) => {
-    console.log(`Reproducir canción: ${title}`);
-    // Aquí implementarías la lógica para reproducir la canción
+    const song = songs.find((s) => s.id === songId);
+    if (song) {
+      // Navegar a la página del reproductor con los datos de la canción
+      const params = new URLSearchParams({
+        id: song.id,
+        title: encodeURIComponent(song.title),
+        lyrics: encodeURIComponent(song.lyrics),
+      });
+      router.push(`player?${params.toString()}`);
+      console.log(`Navegando al reproductor: ${title}`);
+    }
   };
 
   const handleEdit = (songId: string, title: string) => {
