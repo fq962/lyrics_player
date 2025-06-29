@@ -18,6 +18,8 @@ export interface SongModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (song: NewSongData) => void;
+  editingSong?: Song | null;
+  mode?: "add" | "edit";
 }
 
 export type SongModalTab = "basic" | "voices" | "preview";

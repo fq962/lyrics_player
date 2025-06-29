@@ -1,1 +1,2 @@
-export { Button, default as ButtonDefault } from "./Button";
+export { Button } from "./Button";
+export { SongCard } from "./SongCard";
