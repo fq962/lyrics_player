@@ -44,22 +44,22 @@ export const SongsList: React.FC = () => {
     // Aquí implementarías la lógica para editar la canción
   };
 
-  const handleDelete = async (songId: number, title: string) => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar "${title}"?`)) {
-      try {
-        const result = await SongsService.deleteSong(songId);
+  // const handleDelete = async (songId: number, title: string) => {
+  //   if (window.confirm(`¿Estás seguro de que quieres eliminar "${title}"?`)) {
+  //     try {
+  //       const result = await SongsService.deleteSong(songId);
 
-        if (result.success) {
-          setSongs(songs.filter((song) => song.id !== songId));
-        } else {
-          setError(result.error || "Error al eliminar la canción");
-        }
-      } catch (error) {
-        console.error("Error al eliminar canción:", error);
-        setError("Error inesperado al eliminar la canción");
-      }
-    }
-  };
+  //       if (result.success) {
+  //         setSongs(songs.filter((song) => song.id !== songId));
+  //       } else {
+  //         setError(result.error || "Error al eliminar la canción");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error al eliminar canción:", error);
+  //       setError("Error inesperado al eliminar la canción");
+  //     }
+  //   }
+  // };
 
   const generateGradient = (index: number) => {
     const gradients = [
