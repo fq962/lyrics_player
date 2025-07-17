@@ -4,12 +4,27 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 
+interface Voice {
+  id: number;
+  name: string;
+  color: string;
+}
+
+interface VoiceSegment {
+  id: number;
+  start_pos: number;
+  end_pos: number;
+  voice_id: number;
+}
+
 interface PlayerSong {
   id: string;
   title: string;
   lyrics: string;
   artist?: string;
   linesCount: number;
+  voices?: Voice[];
+  voice_segments?: VoiceSegment[];
 }
 
 const PlayerPage: React.FC = () => {
@@ -27,13 +42,38 @@ const PlayerPage: React.FC = () => {
       const songId = searchParams.get("id");
       const title = searchParams.get("title") || "Título de la canción";
       const lyrics = searchParams.get("lyrics") || "Letra de la canción...";
+      const voicesParam = searchParams.get("voices");
+      const voiceSegmentsParam = searchParams.get("voice_segments");
 
       if (songId) {
+        let voices: Voice[] = [];
+        let voice_segments: VoiceSegment[] = [];
+
+        // Parsear voices si existen
+        if (voicesParam) {
+          try {
+            voices = JSON.parse(decodeURIComponent(voicesParam));
+          } catch (e) {
+            console.error("Error parsing voices:", e);
+          }
+        }
+
+        // Parsear voice_segments si existen
+        if (voiceSegmentsParam) {
+          try {
+            voice_segments = JSON.parse(decodeURIComponent(voiceSegmentsParam));
+          } catch (e) {
+            console.error("Error parsing voice_segments:", e);
+          }
+        }
+
         setSong({
           id: songId,
           title: decodeURIComponent(title),
           lyrics: decodeURIComponent(lyrics),
           linesCount: lyrics.split("\n").length,
+          voices,
+          voice_segments,
         });
       }
     }
@@ -51,6 +91,21 @@ const PlayerPage: React.FC = () => {
         title: encodeURIComponent(song.title),
         lyrics: encodeURIComponent(song.lyrics),
       });
+
+      // Agregar voces y segmentos si existen
+      if (song.voices && song.voices.length > 0) {
+        params.append(
+          "voices",
+          encodeURIComponent(JSON.stringify(song.voices))
+        );
+      }
+      if (song.voice_segments && song.voice_segments.length > 0) {
+        params.append(
+          "voice_segments",
+          encodeURIComponent(JSON.stringify(song.voice_segments))
+        );
+      }
+
       router.push(`/reproducer?${params.toString()}`);
     }
   };
@@ -101,53 +156,55 @@ const PlayerPage: React.FC = () => {
       </header>
 
       {/* Controls Section */}
-      <div className="px-4 sm:px-6 mb-6">
-        {/* Speed Controls */}
-        <div className="mb-6">
-          <p className="text-white/80 text-sm mb-3">
-            Velocidad de desplazamiento:
-          </p>
-          <div className="flex flex-wrap gap-2 justify-between items-center">
-            <div className="flex flex-wrap gap-2">
-              {speeds.map((speedOption) => (
-                <Button
-                  key={speedOption.id}
-                  label={speedOption.label}
-                  onClick={() => setSpeed(speedOption.id)}
-                  variant={speed === speedOption.id ? "success" : "outline"}
-                  size="small"
-                  className={
-                    speed === speedOption.id
-                      ? "!bg-green-500/80 !text-white !border-green-400/30"
-                      : "!text-white/80 hover:!text-white"
-                  }
-                />
-              ))}
-            </div>
-
-            {/* Reproducir Button */}
-            <Button
-              label="Reproducir"
-              onClick={togglePlay}
-              variant="primary"
-              size="medium"
-              className="!bg-gradient-to-r !from-pink-500/80 !to-purple-500/80 hover:!from-pink-500/90 hover:!to-purple-500/90 !text-white !border-pink-400/30"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Lyrics Section */}
-      <main className="px-4 sm:px-6 pb-8">
+      <main className="flex-1 px-4 sm:px-6 pb-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl p-6 sm:p-8">
-            {/* Gradient overlay for lyrics background */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl" />
-              <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                <div className="prose prose-invert max-w-none">
-                  <div className="text-white whitespace-pre-line text-base leading-relaxed">
-                    {song.lyrics}
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl p-6 sm:p-8 mb-6">
+            {/* Speed Controls */}
+            <div className="mb-6">
+              <p className="text-white/80 text-sm mb-3">
+                Velocidad de desplazamiento:
+              </p>
+              <div className="flex flex-wrap gap-2 justify-between items-center">
+                <div className="flex flex-wrap gap-2">
+                  {speeds.map((speedOption) => (
+                    <Button
+                      key={speedOption.id}
+                      label={speedOption.label}
+                      onClick={() => setSpeed(speedOption.id)}
+                      variant={speed === speedOption.id ? "success" : "outline"}
+                      size="small"
+                      className={
+                        speed === speedOption.id
+                          ? "!bg-green-500/80 !text-white !border-green-400/30"
+                          : "!text-white/80 hover:!text-white"
+                      }
+                    />
+                  ))}
+                </div>
+
+                {/* Reproducir Button */}
+                <Button
+                  label="Reproducir"
+                  onClick={togglePlay}
+                  variant="primary"
+                  size="medium"
+                  className="!bg-gradient-to-r !from-pink-500/80 !to-purple-500/80 hover:!from-pink-500/90 hover:!to-purple-500/90 !text-white !border-pink-400/30"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Lyrics Section */}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl p-6 sm:p-8">
+              {/* Gradient overlay for lyrics background */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl" />
+                <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                  <div className="prose prose-invert max-w-none">
+                    <div className="text-white whitespace-pre-line text-base leading-relaxed">
+                      {song.lyrics}
+                    </div>
                   </div>
                 </div>
               </div>

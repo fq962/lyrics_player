@@ -4,12 +4,27 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 
+interface Voice {
+  id: number;
+  name: string;
+  color: string;
+}
+
+interface VoiceSegment {
+  id: number;
+  start_pos: number;
+  end_pos: number;
+  voice_id: number;
+}
+
 interface ReproducerSong {
   id: string;
   title: string;
   lyrics: string;
   artist?: string;
   linesCount: number;
+  voices?: Voice[];
+  voice_segments?: VoiceSegment[];
 }
 
 const ReproducerPage: React.FC = () => {
@@ -37,17 +52,276 @@ const ReproducerPage: React.FC = () => {
       const songId = searchParams.get("id");
       const title = searchParams.get("title") || "Título de la canción";
       const lyrics = searchParams.get("lyrics") || "Letra de la canción...";
+      const voicesParam = searchParams.get("voices");
+      const voiceSegmentsParam = searchParams.get("voice_segments");
+
+      console.log("=== DEBUGGING REPRODUCER ===");
+      console.log("songId:", songId);
+      console.log("voicesParam:", voicesParam);
+      console.log("voiceSegmentsParam:", voiceSegmentsParam);
 
       if (songId) {
-        setSong({
+        let voices: Voice[] = [];
+        let voice_segments: VoiceSegment[] = [];
+
+        // Parsear voices si existen
+        if (voicesParam) {
+          try {
+            voices = JSON.parse(decodeURIComponent(voicesParam));
+            console.log("Parsed voices:", voices);
+          } catch (e) {
+            console.error("Error parsing voices:", e);
+          }
+        }
+
+        // Parsear voice_segments si existen
+        if (voiceSegmentsParam) {
+          try {
+            voice_segments = JSON.parse(decodeURIComponent(voiceSegmentsParam));
+            console.log("Parsed voice_segments:", voice_segments);
+          } catch (e) {
+            console.error("Error parsing voice_segments:", e);
+          }
+        }
+
+        const songData = {
           id: songId,
           title: decodeURIComponent(title),
           lyrics: decodeURIComponent(lyrics),
           linesCount: lyrics.split("\n").length,
-        });
+          voices,
+          voice_segments,
+        };
+
+        console.log("Final song data:", songData);
+        setSong(songData);
       }
     }
   }, [searchParams]);
+
+  // Función para renderizar la letra línea por línea con colores
+  const renderLyricsWithColors = () => {
+    if (!song?.lyrics) return null;
+
+    const lyrics = song.lyrics;
+    const lines = lyrics.split("\n");
+
+    console.log("=== RENDERING LYRICS ===");
+    console.log("Song voices:", song.voices);
+    console.log("Song voice_segments:", song.voice_segments);
+    console.log("Lines count:", lines.length);
+
+    // Si no hay segmentos, renderizar normalmente
+    if (
+      !song.voices ||
+      !song.voice_segments ||
+      song.voice_segments.length === 0
+    ) {
+      console.log("No voices or segments found, rendering normally");
+      return lines.map((line, index) => (
+        <div
+          key={index}
+          className="mb-4 text-white opacity-90"
+          style={{
+            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+          }}
+        >
+          {line || "\u00A0"}
+        </div>
+      ));
+    }
+
+    console.log("Processing lines with colors...");
+
+    // Crear un array de caracteres con sus colores
+    const textWithColors = [];
+    let currentPos = 0;
+
+    // Ordenar segmentos por posición
+    const sortedSegments = [...song.voice_segments].sort(
+      (a, b) => a.start_pos - b.start_pos
+    );
+
+    for (const segment of sortedSegments) {
+      // Agregar texto antes del segmento (sin color)
+      if (currentPos < segment.start_pos) {
+        for (let i = currentPos; i < segment.start_pos; i++) {
+          textWithColors.push({
+            char: lyrics[i],
+            color: "#ffffff",
+            voiceId: null,
+          });
+        }
+      }
+
+      // Agregar texto del segmento con color
+      const voice = song.voices?.find((v) => v.id === segment.voice_id);
+      for (let i = segment.start_pos; i < segment.end_pos; i++) {
+        textWithColors.push({
+          char: lyrics[i],
+          color: voice?.color || "#ffffff",
+          voiceId: segment.voice_id,
+        });
+      }
+
+      currentPos = segment.end_pos;
+    }
+
+    // Agregar texto restante
+    if (currentPos < lyrics.length) {
+      for (let i = currentPos; i < lyrics.length; i++) {
+        textWithColors.push({
+          char: lyrics[i],
+          color: "#ffffff",
+          voiceId: null,
+        });
+      }
+    }
+
+    // Convertir a líneas con colores
+    const linesWithColors = [];
+    let currentLine = [];
+    let currentColor = "#ffffff";
+    let currentVoiceId = null;
+
+    for (let i = 0; i < textWithColors.length; i++) {
+      const item = textWithColors[i];
+
+      if (item.char === "\n") {
+        // Finalizar línea actual
+        if (currentLine.length > 0) {
+          linesWithColors.push([...currentLine]);
+          currentLine = [];
+        }
+        linesWithColors.push([]);
+        continue;
+      }
+
+      // Si el color cambia, finalizar el span actual
+      if (item.color !== currentColor || item.voiceId !== currentVoiceId) {
+        if (currentLine.length > 0) {
+          // Agregar span con el color anterior
+          const spanText = currentLine.join("");
+          linesWithColors.push({
+            text: spanText,
+            color: currentColor,
+            voiceId: currentVoiceId,
+          });
+          currentLine = [];
+        }
+        currentColor = item.color;
+        currentVoiceId = item.voiceId;
+      }
+
+      currentLine.push(item.char);
+    }
+
+    // Agregar último span si existe
+    if (currentLine.length > 0) {
+      const spanText = currentLine.join("");
+      linesWithColors.push({
+        text: spanText,
+        color: currentColor,
+        voiceId: currentVoiceId,
+      });
+    }
+
+    console.log("Lines with colors:", linesWithColors);
+
+    // Renderizar las líneas
+    return lines.map((line, lineIndex) => {
+      if (!line) {
+        return (
+          <div
+            key={lineIndex}
+            className="mb-4"
+            style={{
+              textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+            }}
+          >
+            {"\u00A0"}
+          </div>
+        );
+      }
+
+      let lineStart = 0;
+      for (let i = 0; i < lineIndex; i++) {
+        lineStart += lines[i].length + 1; // +1 for \n
+      }
+      const lineEnd = lineStart + line.length;
+
+      const lineSegments = [];
+      let processed = lineStart;
+
+      // Encontrar segmentos que afectan esta línea
+      for (const segment of sortedSegments) {
+        if (segment.start_pos >= lineEnd || segment.end_pos <= lineStart) {
+          continue; // El segmento no afecta esta línea
+        }
+
+        const segmentStart = Math.max(segment.start_pos, lineStart);
+        const segmentEnd = Math.min(segment.end_pos, lineEnd);
+
+        // Texto antes del segmento
+        if (processed < segmentStart) {
+          const text = lyrics.substring(processed, segmentStart);
+          lineSegments.push(
+            <span
+              key={`${lineIndex}-${processed}`}
+              className="text-white opacity-90"
+            >
+              {text}
+            </span>
+          );
+        }
+
+        // Texto del segmento con color
+        const voice = song.voices?.find((v) => v.id === segment.voice_id);
+        const segmentText = lyrics.substring(segmentStart, segmentEnd);
+
+        console.log(
+          `Line ${lineIndex}: segment "${segmentText}" with color ${voice?.color}`
+        );
+
+        lineSegments.push(
+          <span
+            key={`${lineIndex}-${segment.id}`}
+            style={{ color: voice?.color || "#ffffff" }}
+            className="opacity-90 font-medium"
+          >
+            {segmentText}
+          </span>
+        );
+
+        processed = segmentEnd;
+      }
+
+      // Texto restante en la línea
+      if (processed < lineEnd) {
+        const text = lyrics.substring(processed, lineEnd);
+        lineSegments.push(
+          <span
+            key={`${lineIndex}-${processed}`}
+            className="text-white opacity-90"
+          >
+            {text}
+          </span>
+        );
+      }
+
+      return (
+        <div
+          key={lineIndex}
+          className="mb-4"
+          style={{
+            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+          }}
+        >
+          {lineSegments.length > 0 ? lineSegments : line || "\u00A0"}
+        </div>
+      );
+    });
+  };
 
   // Efecto para controlar el scroll automático
   useEffect(() => {
@@ -96,6 +370,30 @@ const ReproducerPage: React.FC = () => {
     setIsPlaying(!isPlaying);
   };
 
+  // Función temporal para probar con datos de ejemplo
+  const testWithSampleData = () => {
+    const sampleSong = {
+      id: "test",
+      title: "Test Song",
+      lyrics:
+        "Solitaria camina la bikina\nLa gente se pone a murmurar\nDicen que tiene una pena\nDicen que tiene una pena que la hace llorar",
+      linesCount: 4,
+      voices: [
+        { id: 3, name: "Voz Principal", color: "#ffffff" },
+        { id: 4, name: "Voz 2", color: "#ef4444" },
+        { id: 5, name: "Voz 3", color: "#10b981" },
+      ],
+      voice_segments: [
+        { id: 2, start_pos: 0, end_pos: 30, voice_id: 3 },
+        { id: 3, start_pos: 31, end_pos: 60, voice_id: 4 },
+        { id: 4, start_pos: 61, end_pos: 90, voice_id: 5 },
+      ],
+    };
+
+    console.log("Setting sample data:", sampleSong);
+    setSong(sampleSong);
+  };
+
   const speeds = [
     { id: "lenta", label: "Lenta" },
     { id: "normal", label: "Normal" },
@@ -136,8 +434,15 @@ const ReproducerPage: React.FC = () => {
             </svg>
           </button>
           <h1 className="text-xl font-bold text-white">
-            {song.title.toUpperCase()}
+            {song?.title.toUpperCase() || "CARGANDO..."}
           </h1>
+          {/* Botón temporal para probar */}
+          <button
+            onClick={testWithSampleData}
+            className="px-3 py-1 bg-yellow-500/80 hover:bg-yellow-500/90 text-black text-sm rounded-lg font-medium"
+          >
+            Test Colors
+          </button>
         </div>
 
         {/* Right side - Speed controls */}
@@ -201,17 +506,8 @@ const ReproducerPage: React.FC = () => {
               {/* Espacio inicial para que el texto comience desde el centro */}
               <div className="h-screen"></div>
 
-              {song.lyrics.split("\n").map((line, index) => (
-                <div
-                  key={index}
-                  className="mb-4 text-white opacity-90"
-                  style={{
-                    textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-                  }}
-                >
-                  {line || "\u00A0"} {/* Non-breaking space for empty lines */}
-                </div>
-              ))}
+              {/* Renderizar letra con colores */}
+              {renderLyricsWithColors()}
 
               {/* Espacio adicional al final para scroll continuo */}
               <div className="h-screen"></div>
@@ -238,6 +534,24 @@ const ReproducerPage: React.FC = () => {
           Velocidad: {speeds.find((s) => s.id === speed)?.label}
         </div>
       </div>
+
+      {/* Voices legend */}
+      {song.voices && song.voices.length > 1 && (
+        <div className="fixed top-4 right-4 bg-black/60 backdrop-blur-md rounded-lg p-3 border border-white/20">
+          <h4 className="text-white/80 text-xs font-medium mb-2">Voces:</h4>
+          <div className="space-y-1">
+            {song.voices.map((voice) => (
+              <div key={voice.id} className="flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: voice.color }}
+                />
+                <span className="text-white/70 text-xs">{voice.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* CSS para ocultar scrollbar */}
       <style jsx>{`
