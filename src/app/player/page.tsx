@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 
@@ -27,7 +27,8 @@ interface PlayerSong {
   voice_segments?: VoiceSegment[];
 }
 
-const PlayerPage: React.FC = () => {
+// Componente separado que usa useSearchParams
+const PlayerContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [song, setSong] = useState<PlayerSong | null>(null);
@@ -213,6 +214,22 @@ const PlayerPage: React.FC = () => {
         </div>
       </main>
     </div>
+  );
+};
+
+// Componente de fallback para el loading
+const LoadingFallback: React.FC = () => (
+  <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-800 to-gray-900 flex items-center justify-center">
+    <div className="text-white">Cargando player...</div>
+  </div>
+);
+
+// Componente principal envuelto en Suspense
+const PlayerPage: React.FC = () => {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <PlayerContent />
+    </Suspense>
   );
 };
 

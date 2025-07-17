@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 
@@ -27,7 +27,8 @@ interface ReproducerSong {
   voice_segments?: VoiceSegment[];
 }
 
-const ReproducerPage: React.FC = () => {
+// Componente separado que usa useSearchParams
+const ReproducerContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [song, setSong] = useState<ReproducerSong | null>(null);
@@ -564,6 +565,22 @@ const ReproducerPage: React.FC = () => {
         }
       `}</style>
     </div>
+  );
+};
+
+// Componente de fallback para el loading
+const LoadingFallback: React.FC = () => (
+  <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="text-white">Cargando reproductor...</div>
+  </div>
+);
+
+// Componente principal envuelto en Suspense
+const ReproducerPage: React.FC = () => {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ReproducerContent />
+    </Suspense>
   );
 };
 
