@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import * as _ from "lodash";
 import { SongsService } from "@/lib/songsService";
 import {
   DbSong,
@@ -37,7 +38,9 @@ export const SongsManager: React.FC = () => {
       const result = await SongsService.getAllSongs();
 
       if (result.success && result.songs) {
-        setSongs(result.songs);
+        // Ordenar las canciones por título antes de setearlas
+        const sortedSongs = _.orderBy(result.songs, ["id"], ["asc"]);
+        setSongs(sortedSongs);
       } else {
         setError(result.error || "Error al cargar las canciones");
       }
