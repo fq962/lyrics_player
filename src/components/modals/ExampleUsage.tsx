@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/Button";
 // Puedes copiar este código donde necesites usar el modal
 
 export const ExampleUsage: React.FC = () => {
-  const { isOpen, openModal, closeModal, handleSave } = useAddSongModal();
+  const { isOpen, isLoading, error, openModal, closeModal, handleSave } =
+    useAddSongModal();
 
   return (
     <div className="p-8">
@@ -19,7 +20,22 @@ export const ExampleUsage: React.FC = () => {
         onClick={openModal}
         variant="primary"
         size="large"
+        disabled={isLoading}
       />
+
+      {/* Mostrar error si existe */}
+      {error && (
+        <div className="mt-4 p-3 bg-red-500/20 border border-red-400/30 rounded-2xl">
+          <p className="text-red-200 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Estado de carga */}
+      {isLoading && (
+        <div className="mt-4 p-3 bg-blue-500/20 border border-blue-400/30 rounded-2xl">
+          <p className="text-blue-200 text-sm">Guardando canción...</p>
+        </div>
+      )}
 
       {/* Modal */}
       <AddSongModal isOpen={isOpen} onClose={closeModal} onSave={handleSave} />

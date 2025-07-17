@@ -1,22 +1,14 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { SongModalProps, SongModalTab, NewSongData } from "@/types/song";
+import {
+  SongModalProps,
+  SongModalTab,
+  NewSongData,
+  Voice,
+  TextAssignment,
+} from "@/types/song";
 import { Button } from "@/components/ui/Button";
-
-interface Voice {
-  id: string;
-  name: string;
-  color: string;
-}
-
-interface TextAssignment {
-  id: string;
-  text: string;
-  voiceId: string;
-  startIndex: number;
-  endIndex: number;
-}
 
 export const AddSongModal: React.FC<SongModalProps> = ({
   isOpen,
@@ -42,6 +34,8 @@ export const AddSongModal: React.FC<SongModalProps> = ({
     start: number;
     end: number;
   } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Pre-llenar datos cuando se está editando
@@ -203,26 +197,36 @@ export const AddSongModal: React.FC<SongModalProps> = ({
     return result;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (formData.title.trim() && formData.lyrics.trim()) {
-      onSave(formData);
+      setIsLoading(true);
+      setError(null);
 
-      // Solo resetear si es modo agregar
-      if (mode === "add") {
-        setFormData({
-          title: "",
-          lyrics: "",
-          artist: "",
-        });
-        setVoices([{ id: "1", name: "Voz Principal", color: "#ffffff" }]);
-        setNewVoiceName("");
-        setTextAssignments([]);
-        setSelectedText("");
-        setSelectedTextIndices(null);
+      try {
+        await onSave(formData, voices, textAssignments);
+
+        // Solo resetear si es modo agregar
+        if (mode === "add") {
+          setFormData({
+            title: "",
+            lyrics: "",
+            artist: "",
+          });
+          setVoices([{ id: "1", name: "Voz Principal", color: "#ffffff" }]);
+          setNewVoiceName("");
+          setTextAssignments([]);
+          setSelectedText("");
+          setSelectedTextIndices(null);
+        }
+
+        setActiveTab("basic");
+        onClose();
+      } catch (error) {
+        console.error("Error al guardar:", error);
+        setError("Error al guardar la canción");
+      } finally {
+        setIsLoading(false);
       }
-
-      setActiveTab("basic");
-      onClose();
     }
   };
 
@@ -267,6 +271,13 @@ export const AddSongModal: React.FC<SongModalProps> = ({
             ×
           </button>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mx-4 mt-4 p-3 bg-red-500/20 border border-red-400/30 rounded-2xl">
+            <p className="text-red-200 text-sm">{error}</p>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex border-b border-white/15">
@@ -546,11 +557,18 @@ export const AddSongModal: React.FC<SongModalProps> = ({
         <div className="p-4 border-t border-white/15">
           <div className="flex justify-end">
             <Button
-              label={mode === "edit" ? "Actualizar Canción" : "Guardar Canción"}
+              label={
+                isLoading
+                  ? "Guardando..."
+                  : mode === "edit"
+                  ? "Actualizar Canción"
+                  : "Guardar Canción"
+              }
               onClick={handleSave}
               variant="success"
               size="medium"
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-md border-white/30 text-white/90 font-medium min-w-[140px] shadow-lg"
+              disabled={isLoading}
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-md border-white/30 text-white/90 font-medium min-w-[140px] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>

@@ -1,27 +1,56 @@
 import { useState } from "react";
-import { NewSongData } from "@/types/song";
+import { NewSongData, Voice, TextAssignment } from "@/types/song";
+import { SongsService } from "@/lib/songsService";
 
 export const useAddSongModal = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
+  const openModal = () => {
+    setIsOpen(true);
+    setError(null);
+  };
 
-  const handleSave = (songData: NewSongData) => {
-    // Aquí puedes agregar la lógica para guardar la canción
-    // Por ejemplo, llamar a una API, actualizar el estado global, etc.
-    console.log("Nueva canción:", songData);
+  const closeModal = () => {
+    setIsOpen(false);
+    setError(null);
+  };
 
-    // Aquí podrías dispatch a un store global, hacer un POST request, etc.
-    // Ejemplo:
-    // await saveSong(songData);
-    // onSongAdded?.(songData);
+  const handleSave = async (
+    songData: NewSongData,
+    voices: Voice[],
+    textAssignments: TextAssignment[]
+  ) => {
+    setIsLoading(true);
+    setError(null);
 
-    closeModal();
+    try {
+      const result = await SongsService.saveSong(
+        songData,
+        voices,
+        textAssignments
+      );
+
+      if (result.success) {
+        console.log("Canción guardada exitosamente:", result.songId);
+        closeModal();
+        // Aquí podrías agregar notificaciones de éxito o actualizar una lista de canciones
+      } else {
+        setError(result.error || "Error al guardar la canción");
+      }
+    } catch (error) {
+      console.error("Error inesperado:", error);
+      setError("Error inesperado al guardar la canción");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
     isOpen,
+    isLoading,
+    error,
     openModal,
     closeModal,
     handleSave,
