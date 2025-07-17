@@ -38,14 +38,15 @@ const ReproducerContent: React.FC = () => {
   >("normal");
 
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
-  const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollAnimationRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef<number>(0);
 
-  // Velocidades de scroll en píxeles por frame (60fps)
+  // Velocidades de scroll en píxeles por segundo
   const speedMultipliers = {
-    lenta: 1,
-    normal: 2,
-    rapida: 4,
-    "muy-rapida": 6,
+    lenta: 30,
+    normal: 60,
+    rapida: 120,
+    "muy-rapida": 180,
   };
 
   useEffect(() => {
@@ -328,38 +329,56 @@ const ReproducerContent: React.FC = () => {
   useEffect(() => {
     if (isPlaying && lyricsContainerRef.current) {
       const container = lyricsContainerRef.current;
-      const speedMultiplier = speedMultipliers[speed];
+      const speedPixelsPerSecond = speedMultipliers[speed];
 
-      const scrollFunction = () => {
-        if (container && isPlaying) {
-          const currentScrollTop = container.scrollTop;
-          const maxScrollTop = container.scrollHeight - container.clientHeight;
+      const scrollFunction = (currentTime: number) => {
+        if (!isPlaying || !container) return;
 
-          // Si llegamos al final, reiniciamos desde el principio
-          if (currentScrollTop >= maxScrollTop - 10) {
-            container.scrollTop = 0;
-          } else {
-            // Scroll hacia abajo
-            container.scrollTop += speedMultiplier;
-          }
+        if (lastFrameTimeRef.current === 0) {
+          lastFrameTimeRef.current = currentTime;
         }
+
+        const deltaTime = currentTime - lastFrameTimeRef.current;
+        lastFrameTimeRef.current = currentTime;
+
+        // Calcular cuántos píxeles mover basado en el tiempo transcurrido
+        const pixelsToMove = (speedPixelsPerSecond * deltaTime) / 1000;
+
+        const currentScrollTop = container.scrollTop;
+        const maxScrollTop = container.scrollHeight - container.clientHeight;
+
+        // Si llegamos al final, reiniciamos desde el principio
+        if (currentScrollTop >= maxScrollTop - 10) {
+          container.scrollTop = 0;
+          lastFrameTimeRef.current = currentTime; // Reset time reference
+        } else {
+          // Scroll hacia abajo de manera suave
+          container.scrollTop += pixelsToMove;
+        }
+
+        // Continuar la animación
+        scrollAnimationRef.current = requestAnimationFrame(scrollFunction);
       };
 
-      scrollIntervalRef.current = setInterval(scrollFunction, 50); // ~20fps para movimiento más suave
+      // Iniciar la animación
+      lastFrameTimeRef.current = 0;
+      scrollAnimationRef.current = requestAnimationFrame(scrollFunction);
     } else {
-      // Limpiar el intervalo cuando se pausa
-      if (scrollIntervalRef.current) {
-        clearInterval(scrollIntervalRef.current);
-        scrollIntervalRef.current = null;
+      // Limpiar la animación cuando se pausa
+      if (scrollAnimationRef.current) {
+        cancelAnimationFrame(scrollAnimationRef.current);
+        scrollAnimationRef.current = null;
       }
+      lastFrameTimeRef.current = 0;
     }
 
     // Cleanup al desmontar o cambiar dependencias
     return () => {
-      if (scrollIntervalRef.current) {
-        clearInterval(scrollIntervalRef.current);
-        scrollIntervalRef.current = null;
+      if (scrollAnimationRef.current) {
+        cancelAnimationFrame(scrollAnimationRef.current);
+        scrollAnimationRef.current = null;
       }
+      lastFrameTimeRef.current = 0;
     };
   }, [isPlaying, speed, speedMultipliers]);
 
