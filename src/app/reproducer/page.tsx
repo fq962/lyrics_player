@@ -36,6 +36,9 @@ const ReproducerContent: React.FC = () => {
   const [speed, setSpeed] = useState<
     "lenta" | "normal" | "rapida" | "muy-rapida"
   >("normal");
+  const [fontSize, setFontSize] = useState<
+    "pequena" | "normal" | "grande" | "muy-grande"
+  >("normal");
 
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const scrollAnimationRef = useRef<number | null>(null);
@@ -47,6 +50,14 @@ const ReproducerContent: React.FC = () => {
     normal: 60,
     rapida: 120,
     "muy-rapida": 180,
+  };
+
+  // Tamaños de fuente
+  const fontSizeClasses = {
+    pequena: "text-3xl md:text-4xl lg:text-5xl",
+    normal: "text-5xl md:text-6xl lg:text-7xl",
+    grande: "text-6xl md:text-7xl lg:text-8xl",
+    "muy-grande": "text-7xl md:text-8xl lg:text-9xl",
   };
 
   useEffect(() => {
@@ -421,6 +432,13 @@ const ReproducerContent: React.FC = () => {
     { id: "muy-rapida", label: "Muy Rápida" },
   ] as const;
 
+  const fontSizes = [
+    { id: "pequena", label: "P" },
+    { id: "normal", label: "N" },
+    { id: "grande", label: "G" },
+    { id: "muy-grande", label: "MG" },
+  ] as const;
+
   if (!song) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -465,27 +483,50 @@ const ReproducerContent: React.FC = () => {
           </button>
         </div>
 
-        {/* Right side - Speed controls */}
-        <div className="flex items-center gap-2">
-          {speeds.map((speedOption) => (
-            <Button
-              key={speedOption.id}
-              label={speedOption.label}
-              onClick={() => setSpeed(speedOption.id)}
-              variant={speed === speedOption.id ? "success" : "ghost"}
-              size="small"
-              className={
-                speed === speedOption.id
-                  ? "!bg-green-500/20 !text-green-400 !border-green-400/30"
-                  : "!text-white/60 hover:!text-white/80 !bg-transparent !border-transparent"
-              }
-            />
-          ))}
+        {/* Right side - Speed controls and Font size controls */}
+        <div className="flex items-center gap-4">
+          {/* Speed controls */}
+          <div className="flex items-center gap-2">
+            <span className="text-white/60 text-xs">Velocidad:</span>
+            {speeds.map((speedOption) => (
+              <Button
+                key={speedOption.id}
+                label={speedOption.label}
+                onClick={() => setSpeed(speedOption.id)}
+                variant={speed === speedOption.id ? "success" : "ghost"}
+                size="small"
+                className={
+                  speed === speedOption.id
+                    ? "!bg-green-500/20 !text-green-400 !border-green-400/30"
+                    : "!text-white/60 hover:!text-white/80 !bg-transparent !border-transparent"
+                }
+              />
+            ))}
+          </div>
+
+          {/* Font size controls */}
+          <div className="flex items-center gap-2">
+            <span className="text-white/60 text-xs">Tamaño:</span>
+            {fontSizes.map((sizeOption) => (
+              <Button
+                key={sizeOption.id}
+                label={sizeOption.label}
+                onClick={() => setFontSize(sizeOption.id)}
+                variant={fontSize === sizeOption.id ? "success" : "ghost"}
+                size="small"
+                className={
+                  fontSize === sizeOption.id
+                    ? "!bg-blue-500/20 !text-blue-400 !border-blue-400/30"
+                    : "!text-white/60 hover:!text-white/80 !bg-transparent !border-transparent"
+                }
+              />
+            ))}
+          </div>
 
           {/* Play/Pause Button */}
           <button
             onClick={togglePlay}
-            className="ml-4 p-2 text-white/80 hover:text-white transition-colors"
+            className="ml-2 p-2 text-white/80 hover:text-white transition-colors"
           >
             {isPlaying ? (
               // Pause Icon
@@ -522,7 +563,9 @@ const ReproducerContent: React.FC = () => {
       >
         <div className="min-h-full flex items-start justify-center px-8 py-20">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-wide">
+            <div
+              className={`${fontSizeClasses[fontSize]} font-bold leading-tight tracking-wide`}
+            >
               {/* Espacio inicial para que el texto comience desde el centro */}
               <div className="h-screen"></div>
 
