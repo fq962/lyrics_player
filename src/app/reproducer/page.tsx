@@ -39,6 +39,7 @@ const ReproducerContent: React.FC = () => {
   const [fontSize, setFontSize] = useState<
     "pequena" | "normal" | "grande" | "muy-grande"
   >("normal");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const scrollAnimationRef = useRef<number | null>(null);
@@ -401,6 +402,10 @@ const ReproducerContent: React.FC = () => {
     setIsPlaying(!isPlaying);
   };
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   // Función temporal para probar con datos de ejemplo
   const testWithSampleData = () => {
     const sampleSong = {
@@ -449,87 +454,15 @@ const ReproducerContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
-      {/* Header with Back Button and Title */}
-      <header className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between">
-        {/* Left side - Back button and title */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleBack}
-            className="text-white/80 hover:text-white transition-colors p-2"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      {/* Header with Back Button and Title - Solo visible si no está en fullscreen */}
+      {!isFullscreen && (
+        <header className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between">
+          {/* Left side - Back button and title */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBack}
+              className="text-white/80 hover:text-white transition-colors p-2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-          <h1 className="text-xl font-bold text-white">
-            {song?.title.toUpperCase() || "CARGANDO..."}
-          </h1>
-          {/* Botón temporal para probar */}
-          <button
-            onClick={testWithSampleData}
-            className="px-3 py-1 bg-yellow-500/80 hover:bg-yellow-500/90 text-black text-sm rounded-lg font-medium"
-          >
-            Test Colors
-          </button>
-        </div>
-
-        {/* Right side - Speed controls and Font size controls */}
-        <div className="flex items-center gap-4">
-          {/* Speed controls */}
-          <div className="flex items-center gap-2">
-            <span className="text-white/60 text-xs">Velocidad:</span>
-            {speeds.map((speedOption) => (
-              <Button
-                key={speedOption.id}
-                label={speedOption.label}
-                onClick={() => setSpeed(speedOption.id)}
-                variant={speed === speedOption.id ? "success" : "ghost"}
-                size="small"
-                className={
-                  speed === speedOption.id
-                    ? "!bg-green-500/20 !text-green-400 !border-green-400/30"
-                    : "!text-white/60 hover:!text-white/80 !bg-transparent !border-transparent"
-                }
-              />
-            ))}
-          </div>
-
-          {/* Font size controls */}
-          <div className="flex items-center gap-2">
-            <span className="text-white/60 text-xs">Tamaño:</span>
-            {fontSizes.map((sizeOption) => (
-              <Button
-                key={sizeOption.id}
-                label={sizeOption.label}
-                onClick={() => setFontSize(sizeOption.id)}
-                variant={fontSize === sizeOption.id ? "success" : "ghost"}
-                size="small"
-                className={
-                  fontSize === sizeOption.id
-                    ? "!bg-blue-500/20 !text-blue-400 !border-blue-400/30"
-                    : "!text-white/60 hover:!text-white/80 !bg-transparent !border-transparent"
-                }
-              />
-            ))}
-          </div>
-
-          {/* Play/Pause Button */}
-          <button
-            onClick={togglePlay}
-            className="ml-2 p-2 text-white/80 hover:text-white transition-colors"
-          >
-            {isPlaying ? (
-              // Pause Icon
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -540,29 +473,155 @@ const ReproducerContent: React.FC = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M10 9v6m4-6v6"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            ) : (
-              // Play Icon
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
+            </button>
+            <h1 className="text-xl font-bold text-white">
+              {song?.title.toUpperCase() || "CARGANDO..."}
+            </h1>
+            {/* Botón temporal para probar */}
+            <button
+              onClick={testWithSampleData}
+              className="px-3 py-1 bg-yellow-500/80 hover:bg-yellow-500/90 text-black text-sm rounded-lg font-medium"
+            >
+              Test Colors
+            </button>
+          </div>
+
+          {/* Right side - Speed controls and Font size controls */}
+          <div className="flex items-center gap-4">
+            {/* Speed controls */}
+            <div className="flex items-center gap-2">
+              <span className="text-white/60 text-xs">Velocidad:</span>
+              {speeds.map((speedOption) => (
+                <Button
+                  key={speedOption.id}
+                  label={speedOption.label}
+                  onClick={() => setSpeed(speedOption.id)}
+                  variant={speed === speedOption.id ? "success" : "ghost"}
+                  size="small"
+                  className={
+                    speed === speedOption.id
+                      ? "!bg-green-500/20 !text-green-400 !border-green-400/30"
+                      : "!text-white/60 hover:!text-white/80 !bg-transparent !border-transparent"
+                  }
+                />
+              ))}
+            </div>
+
+            {/* Font size controls */}
+            <div className="flex items-center gap-2">
+              <span className="text-white/60 text-xs">Tamaño:</span>
+              {fontSizes.map((sizeOption) => (
+                <Button
+                  key={sizeOption.id}
+                  label={sizeOption.label}
+                  onClick={() => setFontSize(sizeOption.id)}
+                  variant={fontSize === sizeOption.id ? "success" : "ghost"}
+                  size="small"
+                  className={
+                    fontSize === sizeOption.id
+                      ? "!bg-blue-500/20 !text-blue-400 !border-blue-400/30"
+                      : "!text-white/60 hover:!text-white/80 !bg-transparent !border-transparent"
+                  }
+                />
+              ))}
+            </div>
+
+            {/* Play/Pause Button */}
+            <button
+              onClick={togglePlay}
+              className="ml-2 p-2 text-white/80 hover:text-white transition-colors"
+            >
+              {isPlaying ? (
+                // Pause Icon
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 9v6m4-6v6"
+                  />
+                </svg>
+              ) : (
+                // Play Icon
+                <svg
+                  className="w-6 h-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Expand Button */}
+            <button
+              onClick={toggleFullscreen}
+              className="ml-2 p-2 text-white/80 hover:text-white transition-colors"
+              title="Pantalla completa"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                />
               </svg>
-            )}
-          </button>
-        </div>
-      </header>
+            </button>
+          </div>
+        </header>
+      )}
+
+      {/* Botón de expandir/contraer en modo fullscreen */}
+      {isFullscreen && (
+        <button
+          onClick={toggleFullscreen}
+          className="fixed top-4 right-4 z-20 p-2 text-white/60 hover:text-white transition-colors bg-black/30 hover:bg-black/50 rounded-full backdrop-blur-sm"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      )}
 
       {/* Main Lyrics Area */}
       <main
         ref={lyricsContainerRef}
-        className="fixed inset-0 top-20 bottom-0 overflow-y-scroll scrollbar-hide"
+        className={`fixed inset-0 ${
+          isFullscreen ? "top-0" : "top-20"
+        } bottom-0 overflow-y-scroll scrollbar-hide`}
         style={{
           scrollBehavior: "auto", // Evitar scroll suave nativo para mejor control
         }}
       >
-        <div className="min-h-full flex items-start justify-center px-8 py-20">
-          <div className="text-center max-w-4xl mx-auto">
+        <div className="min-h-full flex items-start justify-center px-2 py-20">
+          <div
+            className="text-center max-w-none mx-auto w-full"
+            style={{ maxWidth: "90vw" }}
+          >
             <div
               className={`${fontSizeClasses[fontSize]} font-bold leading-tight tracking-wide`}
             >
@@ -579,8 +638,8 @@ const ReproducerContent: React.FC = () => {
         </div>
       </main>
 
-      {/* Status indicator */}
-      {isPlaying && (
+      {/* Status indicator - Solo visible si no está en fullscreen */}
+      {isPlaying && !isFullscreen && (
         <div className="fixed bottom-4 left-4">
           <div className="bg-green-500/20 backdrop-blur-md rounded-full px-4 py-2 border border-green-400/30">
             <div className="flex items-center gap-2 text-green-400 text-sm">
@@ -591,15 +650,17 @@ const ReproducerContent: React.FC = () => {
         </div>
       )}
 
-      {/* Speed indicator */}
-      <div className="fixed bottom-4 right-4 opacity-50">
-        <div className="text-white/60 text-sm">
-          Velocidad: {speeds.find((s) => s.id === speed)?.label}
+      {/* Speed indicator - Solo visible si no está en fullscreen */}
+      {!isFullscreen && (
+        <div className="fixed bottom-4 right-4 opacity-50">
+          <div className="text-white/60 text-sm">
+            Velocidad: {speeds.find((s) => s.id === speed)?.label}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Voices legend */}
-      {song.voices && song.voices.length > 1 && (
+      {/* Voices legend - Solo visible si no está en fullscreen */}
+      {song.voices && song.voices.length > 1 && !isFullscreen && (
         <div className="fixed top-4 right-4 bg-black/60 backdrop-blur-md rounded-lg p-3 border border-white/20">
           <h4 className="text-white/80 text-xs font-medium mb-2">Voces:</h4>
           <div className="space-y-1">
